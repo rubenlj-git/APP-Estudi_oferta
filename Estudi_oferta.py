@@ -4,9 +4,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
-import matplotlib.pyplot as plt
-import requests
-import streamlit as st
 import plotly.express as px
 import base64
 from streamlit_option_menu import option_menu
@@ -193,29 +190,30 @@ if selected == "Municipis":
         bbdd_estudi_hab = excel_n.rename(columns = {'V0006':'N_DORMS', 'NOMD01C':'super_util', 'NOMD01P':'Golfes', 'NOMD01Q':'Safareig', 'NOMD01K': 'cuina_normal', 'NOMD01L': 'cuina_amer'})
         bbdd_estudi_hab['TIPO'] = np.where(bbdd_estudi_hab['TIPO'].isin([1,2]), 'Habitatges Unifamiliars', 'Habitatges Plurifamiliars')
         bbdd_estudi_hab = bbdd_estudi_hab.dropna(axis=1 , how ='all')
-        for i in ['EQUIC_1', 'EQUIC_2', 'EQUIC_3', 'EQUIC_4', 'EQUIC_5', 'EQUIC_6', 'EQUIC_7', 'EQUIC_8', 'EQUIC_99']:
-            bbdd_estudi_hab[i] = bbdd_estudi_hab[i].replace(np.nan, 0)
-
-
-        bbdd_estudi_hab = bbdd_estudi_hab.rename(columns = {'EQUIC_1':'Jardí', 'EQUIC_2': 'Parc', 'EQUIC_3': 'Piscina', 'EQUIC_4': 'Traster', 'EQUIC_5':'Ascensor', 'EQUIC_6':'Esportiu',  'EQUIC_7': 'Jocs', 'EQUIC_8':'Sauna', 'EQUIC_99': 'Ninguno'})
-
-        bbdd_estudi_hab = bbdd_estudi_hab.rename(columns = {'QUALIC_7':'Calefacción', 'QUALIC_8':'pre aa/bc', 'QUALIC_9': 'parquet', 'QUALIC_10':'armaris', 'QUALIC_12':'gas', 'QUALIC_13':'vitro', 'QUALIC_14':'induc', 'QUALIC_22':'placas solares'})
-
-        bbdd_estudi_hab = bbdd_estudi_hab.rename(columns = {'CALEFC_3': 'gasoil', 'CALEFC_4': 'natural', 'CALEFC_5': 'popa', 'CALEFC_6':'elec', 'CALEFC_9':'no indica'})
-
-        vars = ['Jardí', 'Parc', 'Piscina', 'Traster', 'Ascensor', 'Esportiu', 'Jocs', 'Sauna', 'Ninguno', 'Calefacción', 'pre aa/bc', 'parquet', 'armaris', 'gas', 'vitro', 'induc', 'placas solares', 'natural', 'popa', 'elec']
-
-        for i in vars:
-            bbdd_estudi_hab[i] = bbdd_estudi_hab[i].replace(np.nan, 0)
-            bbdd_estudi_hab[i] = bbdd_estudi_hab[i].replace("nan", 0)
-        return(bbdd_estudi_hab)
+        # for i in ['EQUIC_1', 'EQUIC_2', 'EQUIC_3', 'EQUIC_4', 'EQUIC_5', 'EQUIC_6', 'EQUIC_7', 'EQUIC_8', 'EQUIC_99']:
+        #     bbdd_estudi_hab[i] = bbdd_estudi_hab[i].replace(np.nan, 0)
 
 
 
-    vars_common = ["NUMQUEST", "IDHAB","TIPO","V0006","PISO","Atic","Duplex","Planta Baixa", "NOMD01C","Tram_Sup_util","NOMD01A","NOMD01B","NOMD01D","NOMD01E","DORM","LAV","NOMD01K","NOMD01L","TER","NOMD01P","NOMD01Q",
-    "NOMD01R","NOMD01S","Alta_habitatge","Preu_m2_util","Preu_m2_SSEC","Preu_m2_SAEC","NOMD01F","Tram_Preu","TIPH","ESTO","QUALIC_5","QUALIC_6","QUALI_A","QUALIC_7","QUALIC_8","QUALIC_9","QUALIC_10",
-    "QUALIC_12","QUALIC_13","QUALIC_14","QUALIC_22","CALEFC_3","CALEFC_4","CALEFC_5","CALEFC_6","CALEFC_9","QENERGC","EQUIC_1","EQUIC_2","EQUIC_3","EQUIC_4","EQUIC_5","EQUIC_6","EQUIC_7","EQUIC_8","EQUIC_9_50",
-    "EQUIC_99","CODIMUN","Municipi","COD_Nom_Corona","Nom_Corona","PROVINCIA","TERRITORI","DIST","BARRI BCN","Nom DIST","Nom BARRI","ESTUDI"]
+            # bbdd_estudi_hab = bbdd_estudi_hab.rename(columns = {'EQUIC_1':'Jardí', 'EQUIC_3': 'Piscina', 'EQUIC_4': 'Traster', 'EQUIC_5':'Ascensor', 'EQUIC_6':'Esportiu',  'EQUIC_7': 'Jocs', 'EQUIC_8':'Sauna', 'EQUIC_99': 'Ninguno'})
+
+            # bbdd_estudi_hab = bbdd_estudi_hab.rename(columns = {'QUALIC_7':'Calefacción', 'QUALIC_8':'pre aa/bc', 'QUALIC_9': 'parquet', 'QUALIC_10':'armaris', 'QUALIC_12':'gas', 'QUALIC_13':'vitro', 'QUALIC_14':'induc', 'QUALIC_22':'placas solares'})
+
+            # bbdd_estudi_hab = bbdd_estudi_hab.rename(columns = {'CALEFC_3': 'gasoil', 'CALEFC_4': 'natural', 'CALEFC_5': 'popa', 'CALEFC_6':'elec', 'CALEFC_9':'no indica'})
+
+            # vars = ['Jardí', 'Parc', 'Piscina', 'Traster', 'Ascensor', 'Esportiu', 'Jocs', 'Sauna', 'Ninguno', 'Calefacción', 'pre aa/bc', 'parquet', 'armaris', 'gas', 'vitro', 'induc', 'placas solares']
+
+
+        # for i in vars:
+        #     bbdd_estudi_hab[i] = bbdd_estudi_hab[i].replace(np.nan, 0)
+        #     bbdd_estudi_hab[i] = bbdd_estudi_hab[i].replace("nan", 0)
+        # return(bbdd_estudi_hab)
+
+
+
+    vars_common = [NUMQUEST, IDHAB, TIPO, V0006, PISO, Atic, Duplex, Planta Baixa, NOMD01C, Tram_Sup_util, NOMD01A, NOMD01B, NOMD01D, NOMD01E, DORM, LAV, NOMD01K, NOMD01L, TER, NOMD01P, NOMD01Q, NOMD01R, NOMD01S, Alta_habitatge, 
+    Preu_m2_util, Preu_m2_SSEC, Preu_m2_SAEC, NOMD01F_2022, Tram_Preu, TIPH, ESTO, QUALIC_5, QUALIC_6, QUALI_A ,QUALIC_7	QUALIC_8	QUALIC_9	QUALIC_10	QUALIC_12	QUALIC_13	QUALIC_14	QUALIC_22	QENERGC	EQUIC_1	EQUIC_2	EQUIC_3	EQUIC_4	EQUIC_5	EQUIC_6	EQUIC_7	EQUIC_8	EQUIC_9_50	EQUIC_99	CODIMUN	Municipi	COD_Nom_Corona	Nom_Corona	PROVINCIA	TERRITORI	DIST	BARRI BCN	Nom DIST	Nom BARRI	ESTUDI
+]
 
     for i in range(len(hab_estudi)):
         hab_estudi[i] = hab_estudi[i][vars_common]
