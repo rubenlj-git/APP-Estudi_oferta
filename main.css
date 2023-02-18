@@ -13,7 +13,61 @@
   animation: bounce .6s infinite alternate;
 }
 
+
+table.dataframe {
+
+  border-collapse: collapse;
+
+  margin: 25px 0;
+
+  font-size: 0.7em;
+
+  font-family: sans-serif;
+
+  min-width: 400px;
+
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+
 }
+
+table.dataframe thead th {
+
+  background-color: #088F8F;
+
+  color: #FFFFFF;
+
+  text-align: center;
+
+}
+
+table.dataframe tbody tr:nth-of-type(even) {
+
+  background-color: #f3f3f3;
+
+}
+
+table.dataframe tbody tr:last-of-type {
+
+  border-bottom: 2px solid #088F8F;
+
+}
+
+table.dataframe tbody td {
+
+  padding: 12px 15px;
+
+}
+
+table.dataframe tbody td:first-of-type {
+
+  font-weight: 700;
+
+}
+
+
+
+
+
 @-webkit-keyframes bounce {
   to { -webkit-transform: scale(1.1); }
 }
@@ -45,16 +99,14 @@ footer {visibility: hidden;}
 header {visibility: hidden;}
 
 
-<style>
-    }}
-        .reportview-container .main .block-container{{
+
+.reportview-container .main .block-container{
         max-width: {percentage_width_main}%;
         padding-top: {1}rem;
         padding-right: {1}rem;
         padding-left: {1}rem;
         padding-bottom: {1}rem;
-    }}
+    }
 
-        .uploadedFile {{display: none}}
-        footer {{visibility: hidden;}}
-</style>
+.uploadedFile {display: none}
+.footer {visibility: hidden;}

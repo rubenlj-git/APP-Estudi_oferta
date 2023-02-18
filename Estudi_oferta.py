@@ -339,9 +339,10 @@ if selected == "Municipis":
 
     st.markdown("""L’estudi de l’oferta d’habitatges de nova construcció a Catalunya en la seva edició de l’any 2022, ha estat promogut i dirigit per l’Associació de Promotors de Catalunya i realitzat
     per CATCHMENT AMR. Aquesta aplicació presenta els resultats de l’anàlisi del mercat residencial d’habitatges de nova construcció a Catalunya. En l'edició de l'any 2022, l'estudi inclou 84 municipis, 
-    dels quals s'han inventariat 928 promocions d'obra nova amb un total de 8.181 habitatges a la venda. A continuació, es presenta l'evolució dels principals indicadors des les últimes edicions incloent 2022:""")
+    dels quals s'han inventariat 928 promocions d'obra nova amb un total de 8.181 habitatges a la venda. A continuació, es presenta un anàlisi dels principals indicadors als municipis estudiats a l'edició del 2022:""")
 
     st.sidebar.header("Selecciona un municipi")
+
     df_list =[]
 
     mun_2016_2017 = pd.read_excel(path + "Resum 2016 - 2017.xlsx", sheet_name="Municipis 2016-2017")
@@ -413,76 +414,13 @@ if selected == "Municipis":
 
     mun_names = sorted(df_vf[df_vf["Any"]==2022]["GEO"].unique())
     selected_mun = st.sidebar.selectbox('Municipi seleccionat', mun_names, index= mun_names.index("Barcelona"))
-
-    def table_mun(data, selected_mun):
-        df_preu_super = data[(data["GEO"]==selected_mun)].drop(["GEO"], axis=1)
-        df_preu_super['Valor'] = round(df_preu_super['Valor'], 1)
-        df_wide = df_preu_super.pivot_table(index=["Tipologia", "Variable"], columns=["Any"], values = 'Valor').reset_index()
-        df_wide["Variable"] = df_wide["Variable"].str.replace("€", "EUR")
-        df_wide['Tipologia'] = df_wide['Tipologia'].apply(lambda x: x[0] + x[1:].lower())
-        return(df_wide.groupby(["Tipologia", "Variable"]).sum())
-
-    st.header('Municipi: ' + selected_mun)
-
-    st.dataframe(table_mun(df_vf, selected_mun), height=370, use_container_width=True)
-
-
-    def filedownload(df):
-        csv = df.to_csv(index=False)
-        b64 = base64.b64encode(csv.encode(encoding="Latin-1")).decode(encoding="Latin-1")  # strings <-> bytes conversions
-        href = f'<a href="data:file/csv;charset=Latin-1;base64,{b64}" download="Estudi_oferta.csv">Descarregar arxiu CSV</a>'
-        return href
-
-    st.markdown(filedownload(table_mun(df_vf, selected_mun)), unsafe_allow_html=True)
-
-
-
-
-
-    color_map = ['#63838B', "#215C67", '#088F8F', "#4BACC6"]
-
-    def plot_mun_hist_units(selected_mun, variable_int):
-        df_preus = df_vf_aux[(df_vf_aux['Variable']==variable_int) & (df_vf_aux['GEO']==selected_mun)].drop(['Variable'], axis=1).reset_index().drop('index', axis=1)
-        df_preus['Valor'] = np.where(df_preus['Valor']==0, np.NaN, round(df_preus['Valor'], 1))
-        df_preus['Any'] = df_preus['Any'].astype(int)
-        df_preus = df_preus[df_preus["Tipologia"]!="TOTAL HABITATGES"]
-        fig = px.bar(df_preus, x='Any', y='Valor', color='Tipologia', color_discrete_sequence=['#088F8F', "#4BACC6"], range_y=[0, None], labels={'Valor': variable_int, 'Any': 'Any'}, text= "Valor")
-        fig.update_layout(font=dict(size=13))
-        return fig
-
-    def plot_mun_hist(selected_mun, variable_int):
-        df_preus = df_vf[(df_vf['Variable']==variable_int) & (df_vf['GEO']==selected_mun)].drop(['Variable'], axis=1).reset_index().drop('index', axis=1)
-        df_preus['Valor'] = np.where(df_preus['Valor']==0, np.NaN, round(df_preus['Valor'], 1))
-        df_preus['Any'] = df_preus['Any'].astype(int)
-        
-        fig = px.bar(df_preus, x='Any', y='Valor', color='Tipologia', color_discrete_sequence=["#215C67", '#088F8F', "#4BACC6"], range_y=[0, None], labels={'Valor': variable_int, 'Any': 'Any'}, text='Valor', barmode='group')
-        fig.update_layout(font=dict(size=13))
-        
-        return fig
-
+    st.header(selected_mun)
     st.markdown("""
-    Aquest gràfic mostra la evolució dels habitatges de nova construcció per tipologia. 
+    Distribució de preus i superfícies
     """)
-
-    left_col, right_col = st.columns((1, 1))
-    with left_col:
-        st.plotly_chart(plot_mun_hist_units(selected_mun, "Unitats"))
-    with right_col:
-        st.plotly_chart(plot_mun_hist(selected_mun, 'Superfície mitjana (m² útils)'))
-
-
-
-    left_col, right_col = st.columns((1, 1))
-    with left_col:
-        st.plotly_chart(plot_mun_hist(selected_mun, "Preu de venda per m² útil (€)"))
-    with right_col:
-        st.plotly_chart(plot_mun_hist(selected_mun, "Preu mitjà de venda de l'habitatge (€)"))
-
-
-
     def plotmun_streamlit(data, selected_mun, kpi):
         df = data[(data['Municipi']==selected_mun)]
-        fig = px.histogram(df, x=kpi, title= kpi, labels={'x':kpi, 'y':'Freqüència'})
+        fig = px.histogram(df, x=kpi, title= "", labels={'x':kpi, 'y':'Freqüència'})
         fig.data[0].marker.color = "cyan"
         fig.layout.xaxis.title.text = kpi
         fig.layout.yaxis.title.text = 'Freqüència'
@@ -542,6 +480,76 @@ if selected == "Municipis":
 
     with right_col:
         st.plotly_chart(lavcount_plot_mun(bbdd_estudi_hab_mod, selected_mun))
+
+
+
+
+    def table_mun(Municipi, Any):
+        df_mun_filtered = df_final[(df_final["GEO"]==Municipi) & (df_final["Any"]>=Any)].drop(["Àmbits territorials","Corones","Comarques","Província", "codiine"], axis=1).pivot(index=["Any"], columns=["Tipologia", "Variable"], values="Valor")
+        df_mun_unitats = df_final[(df_final["GEO"]==Municipi) & (df_final["Any"]>=Any)].drop(["Àmbits territorials","Corones","Comarques","Província", "codiine"], axis=1).drop_duplicates(["Any","Tipologia","Unitats"]).pivot(index=["Any"], columns=["Tipologia"], values="Unitats")
+        df_mun_unitats.columns= [("HABITATGES PLURIFAMILIARS", "Unitats"), ("HABITATGES UNIFAMILIARS", "Unitats"), ("TOTAL HABITATGES", "Unitats")]
+        df_mun_n = pd.concat([df_mun_filtered, df_mun_unitats], axis=1)
+        df_mun_n[("HABITATGES PLURIFAMILIARS", "Unitats %")] = (df_mun_n[("HABITATGES PLURIFAMILIARS", "Unitats")]/df_mun_n[("TOTAL HABITATGES", "Unitats")])*100
+        df_mun_n[("HABITATGES UNIFAMILIARS", "Unitats %")] = (df_mun_n[("HABITATGES UNIFAMILIARS", "Unitats")] /df_mun_n[("TOTAL HABITATGES", "Unitats")])*100
+        df_mun_n = df_mun_n.sort_index(axis=1, level=[0,1])
+        num_cols = df_mun_n.select_dtypes(include=['float64', 'int64']).columns
+        df_mun_n[num_cols] = df_mun_n[num_cols].round(0)
+        df_mun_n[num_cols] = df_mun_n[num_cols].astype(int)
+        return(df_mun_n.to_html())
+
+    st.markdown(table_mun(selected_mun, 2018), unsafe_allow_html=True)
+
+
+    # def filedownload(df):
+    #     csv = df.to_csv(index=False)
+    #     b64 = base64.b64encode(csv.encode(encoding="Latin-1")).decode(encoding="Latin-1")  # strings <-> bytes conversions
+    #     href = f'<a href="data:file/csv;charset=Latin-1;base64,{b64}" download="Estudi_oferta.csv">Descarregar arxiu CSV</a>'
+    #     return href
+
+    # st.markdown(filedownload(table_mun(selected_mun, 2018)), unsafe_allow_html=True)
+
+
+
+    color_map = ['#63838B', "#215C67", '#088F8F', "#4BACC6"]
+
+    def plot_mun_hist_units(selected_mun, variable_int):
+        df_preus = df_vf_aux[(df_vf_aux['Variable']==variable_int) & (df_vf_aux['GEO']==selected_mun)].drop(['Variable'], axis=1).reset_index().drop('index', axis=1)
+        df_preus['Valor'] = np.where(df_preus['Valor']==0, np.NaN, round(df_preus['Valor'], 1))
+        df_preus['Any'] = df_preus['Any'].astype(int)
+        df_preus = df_preus[df_preus["Tipologia"]!="TOTAL HABITATGES"]
+        fig = px.bar(df_preus, x='Any', y='Valor', color='Tipologia', color_discrete_sequence=['#088F8F', "#4BACC6"], range_y=[0, None], labels={'Valor': variable_int, 'Any': 'Any'}, text= "Valor")
+        fig.update_layout(font=dict(size=13))
+        return fig
+
+    def plot_mun_hist(selected_mun, variable_int):
+        df_preus = df_vf[(df_vf['Variable']==variable_int) & (df_vf['GEO']==selected_mun)].drop(['Variable'], axis=1).reset_index().drop('index', axis=1)
+        df_preus['Valor'] = np.where(df_preus['Valor']==0, np.NaN, round(df_preus['Valor'], 1))
+        df_preus['Any'] = df_preus['Any'].astype(int)
+        
+        fig = px.bar(df_preus, x='Any', y='Valor', color='Tipologia', color_discrete_sequence=["#215C67", '#088F8F', "#4BACC6"], range_y=[0, None], labels={'Valor': variable_int, 'Any': 'Any'}, text='Valor', barmode='group')
+        fig.update_layout(font=dict(size=13))
+        
+        return fig
+
+    st.markdown("""
+    Aquest gràfic mostra la evolució dels habitatges de nova construcció per tipologia. 
+    """)
+
+    left_col, right_col = st.columns((1, 1))
+    with left_col:
+        st.plotly_chart(plot_mun_hist_units(selected_mun, "Unitats"))
+    with right_col:
+        st.plotly_chart(plot_mun_hist(selected_mun, 'Superfície mitjana (m² útils)'))
+
+
+
+    left_col, right_col = st.columns((1, 1))
+    with left_col:
+        st.plotly_chart(plot_mun_hist(selected_mun, "Preu de venda per m² útil (€)"))
+    with right_col:
+        st.plotly_chart(plot_mun_hist(selected_mun, "Preu mitjà de venda de l'habitatge (€)"))
+
+
 
 if selected=="Contacte":
     load_css_file(path + "main.css")
