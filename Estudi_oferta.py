@@ -7,7 +7,7 @@ import numpy as np
 import plotly.express as px
 import base64
 from streamlit_option_menu import option_menu
-
+import io
 
 # Hide menu and watermark
 # hide_st_style = """
@@ -35,8 +35,8 @@ st.set_page_config(
 # Creating a dropdown menu with options and icons, and customizing the appearance of the menu using CSS styles.
 selected = option_menu(
     menu_title=None,  # required
-    options=["Províncies", "Comarques","Municipis", "Contacte"],  # Dropdown menu
-    icons=["map", "building", "house-fill","envelope"],  # Icons for dropdown menu
+    options=["Províncies i àmbits","Municipis", "Contacte"],  # Dropdown menu
+    icons=["map", "house-fill","envelope"],  # Icons for dropdown menu
     menu_icon="cast",  # optional
     default_index=0,  # optional
     orientation="horizontal",
@@ -295,16 +295,94 @@ def tidy_bbdd(any):
 
 bbdd_estudi_prom, bbdd_estudi_hab, bbdd_estudi_hab_mod = tidy_bbdd(2022)
 
+df_list =[]
 
-if selected == "Províncies":
-    st.title(f"You have selected {selected}")
+mun_2016_2017 = pd.read_excel(path + "Resum 2016 - 2017.xlsx", sheet_name="Municipis 2016-2017")
+mun_2016 = mun_2016_2017.iloc[:,:13]
+mun_2017 = mun_2016_2017.iloc[:,14:26]
+
+mun_2017_2018 = pd.read_excel(path + "Resum 2017 - 2018.xlsx", sheet_name="Municipis 2017-2018")
+mun_2018 = mun_2017_2018.iloc[:,14:27]
+
+mun_2018_2019 = pd.read_excel(path + "Resum 2018 - 2019.xlsx", sheet_name="Municipis 2018-2019")
+mun_2019 = mun_2018_2019.iloc[:,14:27]
+
+mun_2020_2021 = pd.read_excel(path + "Resum 2020 - 2021.xlsx", sheet_name="Municipis")
+mun_2020 = mun_2020_2021.iloc[:,:13]
+mun_2020 = mun_2020.dropna(how ='all',axis=0)
+mun_2021 = mun_2020_2021.iloc[:,14:27]
+mun_2021 = mun_2021.dropna(how ='all',axis=0)
+
+mun_2022 = pd.read_excel(path + "Resum 2022.xlsx", sheet_name="Municipis")
+mun_2022 = mun_2022.iloc[:,14:27]
+mun_2022 = mun_2022.dropna(how ='all',axis=0)
+
+maestro_estudi = pd.read_excel(path + "Maestro estudi_oferta.xlsx", sheet_name="Maestro")
+
+def tidy_data(mun_year, year):
+    df =mun_year.T
+    df.columns = df.iloc[0,:]
+    df = df.iloc[1:,:].reset_index()
+    df.columns.values[:3] = ['Any', 'Tipologia', "Variable"]
+    df['Tipologia'] = df['Tipologia'].ffill()
+    df['Any'] = year
+    geo = df.columns[3:].values
+    df_melted = pd.melt(df, id_vars=['Any', 'Tipologia', 'Variable'], value_vars=geo, value_name='Valor')
+    df_melted.columns.values[3] = 'GEO'
+    return(df_melted)
+
+df_vf_aux = pd.DataFrame()
+
+for df_frame, year in zip(["mun_2018", "mun_2019", "mun_2020", "mun_2021", "mun_2022"], [2018, 2019, 2020, 2021, 2022]):
+    df_vf_aux = pd.concat([df_vf_aux, tidy_data(eval(df_frame), year)], axis=0)
+
+
+df_vf_aux['Variable']= np.where(df_vf_aux['Variable']=="Preu de     venda per      m² útil (€)", "Preu de venda per m² útil (€)", df_vf_aux['Variable'])
+df_vf_aux['Valor'] = pd.to_numeric(df_vf_aux['Valor'], errors='coerce')
+
+df_vf_aux = df_vf_aux[~df_vf_aux['GEO'].str.contains("província|Província|Municipis")]
+
+df_vf_merged = pd.merge(df_vf_aux, maestro_estudi, how="left", on="GEO")
+df_vf_merged = df_vf_merged[~df_vf_merged["Província"].isna()].dropna(axis=1, how="all")
+df_vf = df_vf_merged[df_vf_merged["Variable"]!="Unitats"]
+df_unitats = df_vf_merged[df_vf_merged["Variable"]=="Unitats"].drop("Variable", axis=1)
+df_unitats = df_unitats.rename(columns={"Valor": "Unitats"})
+# df_vf[df_vf["Província"].isna()]["GEO"].unique()
+df_final = pd.merge(df_vf, df_unitats, how="left")
+df_final = df_final[df_final["GEO"]!="Catalunya"]
+df_final = df_final[['Any','Àmbits territorials','Comarques', 'Corones', 'Província', 'codiine', 'GEO', 'Tipologia', 'Variable', 'Valor','Unitats']]
+
+def weighted_mean(data):
+    weighted_sum = (data['Valor'] * data['Unitats']).sum()
+    sum_peso = data['Unitats'].sum()
+    # data["Valor"] = weighted_sum / sum_peso
+    return weighted_sum / sum_peso
+
+ambits_df = df_final.groupby(["Any", "Tipologia", "Variable", "Àmbits territorials"]).apply(weighted_mean).reset_index().rename(columns= {0:"Valor"})
+ambits_df = ambits_df.rename(columns={"Àmbits territorials":"GEO"})
+comarques_df = df_final.groupby(["Any", "Tipologia", "Variable", "Comarques"]).apply(weighted_mean).reset_index().rename(columns= {0:"Valor"}).dropna(axis=0)
+comarques_df = comarques_df.rename(columns={"Comarques":"GEO"})
+provincia_df = df_final.groupby(["Any", "Tipologia", "Variable", "Província"]).apply(weighted_mean).reset_index().rename(columns= {0:"Valor"})
+
+if selected == "Províncies i àmbits":
     load_css_file(path + "main.css")
+    st.write(
+    f"""
+    <div style="text-align:center;">
+        <h1>{"ESTUDI D'OFERTA DE NOVA CONSTRUCCIÓ 2022"}</h1>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
+    st.markdown("""L’estudi de l’oferta d’habitatges de nova construcció a Catalunya en la seva edició de l’any 2022, ha estat promogut i dirigit per l’Associació de Promotors de Catalunya i realitzat
+    per CATCHMENT AMR. Aquesta aplicació presenta els resultats de l’anàlisi del mercat residencial d’habitatges de nova construcció a Catalunya. En l'edició de l'any 2022, l'estudi inclou 84 municipis, 
+    dels quals s'han inventariat 928 promocions d'obra nova amb un total de 8.181 habitatges a la venda. A continuació, es presenta un anàlisi dels principals indicadors per les diferents províncies a l'edició del 2022:""")
 
-if selected == "Comarques":
-    st.title(f"You have selected {selected}")
-    load_css_file(path + "main.css")
-
+    st.sidebar.header("Selecciona una província o àmbit territorial:")
+    prov_names = sorted(df_vf[df_vf["Any"]==2022]["GEO"].unique())
+    selected_mun = st.sidebar.selectbox('Municipi seleccionat', prov_names, index= prov_names.index("Barcelona"))
+    st.header(selected_mun)
 
 if selected == "Municipis":
 
@@ -343,74 +421,7 @@ if selected == "Municipis":
 
     st.sidebar.header("Selecciona un municipi")
 
-    df_list =[]
 
-    mun_2016_2017 = pd.read_excel(path + "Resum 2016 - 2017.xlsx", sheet_name="Municipis 2016-2017")
-    mun_2016 = mun_2016_2017.iloc[:,:13]
-    mun_2017 = mun_2016_2017.iloc[:,14:26]
-
-    mun_2017_2018 = pd.read_excel(path + "Resum 2017 - 2018.xlsx", sheet_name="Municipis 2017-2018")
-    mun_2018 = mun_2017_2018.iloc[:,14:27]
-
-    mun_2018_2019 = pd.read_excel(path + "Resum 2018 - 2019.xlsx", sheet_name="Municipis 2018-2019")
-    mun_2019 = mun_2018_2019.iloc[:,14:27]
-
-    mun_2020_2021 = pd.read_excel(path + "Resum 2020 - 2021.xlsx", sheet_name="Municipis")
-    mun_2020 = mun_2020_2021.iloc[:,:13]
-    mun_2020 = mun_2020.dropna(how ='all',axis=0)
-    mun_2021 = mun_2020_2021.iloc[:,14:27]
-    mun_2021 = mun_2021.dropna(how ='all',axis=0)
-
-    mun_2022 = pd.read_excel(path + "Resum 2022.xlsx", sheet_name="Municipis")
-    mun_2022 = mun_2022.iloc[:,14:27]
-    mun_2022 = mun_2022.dropna(how ='all',axis=0)
-
-    maestro_estudi = pd.read_excel(path + "Maestro estudi_oferta.xlsx", sheet_name="Maestro")
-
-    def tidy_data(mun_year, year):
-        df =mun_year.T
-        df.columns = df.iloc[0,:]
-        df = df.iloc[1:,:].reset_index()
-        df.columns.values[:3] = ['Any', 'Tipologia', "Variable"]
-        df['Tipologia'] = df['Tipologia'].ffill()
-        df['Any'] = year
-        geo = df.columns[3:].values
-        df_melted = pd.melt(df, id_vars=['Any', 'Tipologia', 'Variable'], value_vars=geo, value_name='Valor')
-        df_melted.columns.values[3] = 'GEO'
-        return(df_melted)
-
-    df_vf_aux = pd.DataFrame()
-
-    for df_frame, year in zip(["mun_2018", "mun_2019", "mun_2020", "mun_2021", "mun_2022"], [2018, 2019, 2020, 2021, 2022]):
-        df_vf_aux = pd.concat([df_vf_aux, tidy_data(eval(df_frame), year)], axis=0)
-
-
-    df_vf_aux['Variable']= np.where(df_vf_aux['Variable']=="Preu de     venda per      m² útil (€)", "Preu de venda per m² útil (€)", df_vf_aux['Variable'])
-    df_vf_aux['Valor'] = pd.to_numeric(df_vf_aux['Valor'], errors='coerce')
-
-    df_vf_aux = df_vf_aux[~df_vf_aux['GEO'].str.contains("província|Província|Municipis")]
-
-    df_vf_merged = pd.merge(df_vf_aux, maestro_estudi, how="left", on="GEO")
-    df_vf_merged = df_vf_merged[~df_vf_merged["Província"].isna()].dropna(axis=1, how="all")
-    df_vf = df_vf_merged[df_vf_merged["Variable"]!="Unitats"]
-    df_unitats = df_vf_merged[df_vf_merged["Variable"]=="Unitats"].drop("Variable", axis=1)
-    df_unitats = df_unitats.rename(columns={"Valor": "Unitats"})
-    # df_vf[df_vf["Província"].isna()]["GEO"].unique()
-    df_final = pd.merge(df_vf, df_unitats, how="left")
-    df_final = df_final[df_final["GEO"]!="Catalunya"]
-    df_final = df_final[['Any','Àmbits territorials','Comarques', 'Corones', 'Província', 'codiine', 'GEO', 'Tipologia', 'Variable', 'Valor','Unitats']]
-
-    def weighted_mean(data):
-      weighted_sum = (data['Valor'] * data['Unitats']).sum()
-      sum_peso = data['Unitats'].sum()
-      # data["Valor"] = weighted_sum / sum_peso
-      return weighted_sum / sum_peso
-
-    ambits_df = df_final.groupby(["Any", "Tipologia", "Variable", "Àmbits territorials"]).apply(weighted_mean).reset_index().rename(columns= {0:"Valor"})
-    ambits_df = ambits_df.rename(columns={"Àmbits territorials":"GEO"})
-    comarques_df = df_final.groupby(["Any", "Tipologia", "Variable", "Comarques"]).apply(weighted_mean).reset_index().rename(columns= {0:"Valor"}).dropna(axis=0)
-    comarques_df = comarques_df.rename(columns={"Comarques":"GEO"})
-    provincia_df = df_final.groupby(["Any", "Tipologia", "Variable", "Província"]).apply(weighted_mean).reset_index().rename(columns= {0:"Valor"})
 
     mun_names = sorted(df_vf[df_vf["Any"]==2022]["GEO"].unique())
     selected_mun = st.sidebar.selectbox('Municipi seleccionat', mun_names, index= mun_names.index("Barcelona"))
@@ -482,7 +493,7 @@ if selected == "Municipis":
         st.plotly_chart(lavcount_plot_mun(bbdd_estudi_hab_mod, selected_mun))
 
 
-
+    st.header("Comparativa amb anys anteriors: Municipi de " + selected_mun)
 
     def table_mun(Municipi, Any):
         df_mun_filtered = df_final[(df_final["GEO"]==Municipi) & (df_final["Any"]>=Any)].drop(["Àmbits territorials","Corones","Comarques","Província", "codiine"], axis=1).pivot(index=["Any"], columns=["Tipologia", "Variable"], values="Valor")
@@ -495,19 +506,19 @@ if selected == "Municipis":
         num_cols = df_mun_n.select_dtypes(include=['float64', 'int64']).columns
         df_mun_n[num_cols] = df_mun_n[num_cols].round(0)
         df_mun_n[num_cols] = df_mun_n[num_cols].astype(int)
-        return(df_mun_n.to_html())
+        return(df_mun_n)
 
-    st.markdown(table_mun(selected_mun, 2018), unsafe_allow_html=True)
+    st.markdown(table_mun(selected_mun, 2018).to_html(), unsafe_allow_html=True)
 
-
-    # def filedownload(df):
-    #     csv = df.to_csv(index=False)
-    #     b64 = base64.b64encode(csv.encode(encoding="Latin-1")).decode(encoding="Latin-1")  # strings <-> bytes conversions
-    #     href = f'<a href="data:file/csv;charset=Latin-1;base64,{b64}" download="Estudi_oferta.csv">Descarregar arxiu CSV</a>'
-    #     return href
-
-    # st.markdown(filedownload(table_mun(selected_mun, 2018)), unsafe_allow_html=True)
-
+    def filedownload(df, filename):
+        towrite = io.BytesIO()
+        df.to_excel(towrite, encoding='latin-1', index=True, header=True)
+        towrite.seek(0)
+        b64 = base64.b64encode(towrite.read()).decode("latin-1")
+        href = f'<a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}" download="{filename}">Descarregar arxiu Excel</a>'
+        return href
+    filename = "Estudi_oferta.xlsx"
+    st.markdown(filedownload(table_mun(selected_mun, 2018), filename), unsafe_allow_html=True)
 
 
     color_map = ['#63838B', "#215C67", '#088F8F', "#4BACC6"]
