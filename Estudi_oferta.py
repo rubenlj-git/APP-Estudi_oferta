@@ -8,6 +8,11 @@ import plotly.express as px
 import base64
 from streamlit_option_menu import option_menu
 import io
+import geopandas as gpd
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+import plotly.graph_objects as go
+import matplotlib.colors as colors
+
 
 # Hide menu and watermark
 # hide_st_style = """
@@ -364,46 +369,19 @@ comarques_df = df_final.groupby(["Any", "Tipologia", "Variable", "Comarques"]).a
 comarques_df = comarques_df.rename(columns={"Comarques":"GEO"})
 provincia_df = df_final.groupby(["Any", "Tipologia", "Variable", "Província"]).apply(weighted_mean).reset_index().rename(columns= {0:"Valor"})
 
+# PROVÍNCIES I ÀMBITS TERRITORIALS
+
 if selected == "Províncies i àmbits":
     load_css_file(path + "main.css")
-    st.write(
-    f"""
-    <div style="text-align:center;">
-        <h1>{"ESTUDI D'OFERTA DE NOVA CONSTRUCCIÓ 2022"}</h1>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
-
-    st.markdown("""L’estudi de l’oferta d’habitatges de nova construcció a Catalunya en la seva edició de l’any 2022, ha estat promogut i dirigit per l’Associació de Promotors de Catalunya i realitzat
-    per CATCHMENT AMR. Aquesta aplicació presenta els resultats de l’anàlisi del mercat residencial d’habitatges de nova construcció a Catalunya. En l'edició de l'any 2022, l'estudi inclou 84 municipis, 
-    dels quals s'han inventariat 928 promocions d'obra nova amb un total de 8.181 habitatges a la venda. A continuació, es presenta un anàlisi dels principals indicadors per les diferents províncies a l'edició del 2022:""")
-
-    st.sidebar.header("Selecciona una província o àmbit territorial:")
-    prov_names = sorted(df_vf[df_vf["Any"]==2022]["GEO"].unique())
-    selected_mun = st.sidebar.selectbox('Municipi seleccionat', prov_names, index= prov_names.index("Barcelona"))
-    st.header(selected_mun)
-
-if selected == "Municipis":
-
-    # st.title("RESULTATS ESTUDI D'OFERTA APCE")
-    load_css_file(path + "main.css")
-# Creating three equal-width columns, and using the right column to display an image. 
-# The image is read from a file and then displayed using a Markdown string.
     left_col, center_col, right_col = st.columns((1, 1, 1))
     with right_col:
         with open(path + "APCE.png", "rb") as f:
-
             data_uri = base64.b64encode(f.read()).decode("utf-8")
         markdown = f"""
         #
         ![image](data:image/png;base64,{data_uri})
         """
         st.markdown(markdown, unsafe_allow_html=True)
-
-
-    # left_col, center_col, right_col = st.columns((1, 1, 1))
-    # with center_col:
     st.write(
     f"""
     <div style="text-align:center;">
@@ -411,7 +389,90 @@ if selected == "Municipis":
     </div>
     """,
     unsafe_allow_html=True
-)
+    )
+    st.markdown("""L’estudi de l’oferta d’habitatges de nova construcció a Catalunya en la seva edició de l’any 2022, ha estat promogut i dirigit per l’Associació de Promotors de Catalunya i realitzat
+    per CATCHMENT AMR. Aquesta aplicació presenta els resultats de l’anàlisi del mercat residencial d’habitatges de nova construcció a Catalunya. En l'edició de l'any 2022, l'estudi inclou 84 municipis, 
+    dels quals s'han inventariat 928 promocions d'obra nova amb un total de 8.181 habitatges a la venda. A continuació, es presenta un anàlisi dels principals indicadors per les diferents províncies a l'edició del 2022:""")
+
+    st.sidebar.header("Selecciona una província o àmbit territorial:")
+    # prov_names = ["Catalunya", "Barcelona", "Girona", "Tarragona", "Lleida"] + sorted([ambit_n for ambit_n in maestro_estudi["Corones"].unique().tolist() if ambit_n!="Catalunya"])
+    prov_names = sorted([ambit_n for ambit_n in ambits_df["GEO"].unique().tolist() if ambit_n!="Catalunya"])
+    selected_prov = st.sidebar.selectbox('', prov_names, index= prov_names.index("Àmbit territorial Metropolità"))
+    st.header(selected_prov)
+    st.header("Comparativa amb anys anteriors: "+ selected_prov)
+
+
+
+
+    def table_prov(prov, Any):
+        df_prov_filtered = ambits_df[((ambits_df["GEO"]==prov)) & (ambits_df["Any"]>=Any)].pivot(index=["Any"], columns=["Tipologia", "Variable"], values="Valor")
+        df_prov_n = df_prov_filtered.sort_index(axis=1, level=[0,1])
+        num_cols = df_prov_n.select_dtypes(include=['float64', 'int64']).columns
+        df_prov_n[num_cols] = df_prov_n[num_cols].round(0)
+        df_prov_n[num_cols] = df_prov_n[num_cols].astype(int)
+        return(df_prov_n)
+
+    st.markdown(table_prov(selected_prov, 2018).to_html(), unsafe_allow_html=True)
+
+    def filedownload(df, filename):
+        towrite = io.BytesIO()
+        df.to_excel(towrite, encoding='latin-1', index=True, header=True)
+        towrite.seek(0)
+        b64 = base64.b64encode(towrite.read()).decode("latin-1")
+        href = f'<a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}" download="{filename}">Descarregar arxiu Excel</a>'
+        return href
+    filename = "Estudi_oferta.xlsx"
+    st.markdown(filedownload(table_prov(selected_prov, 2018), filename), unsafe_allow_html=True)
+
+    provprom_map = bbdd_estudi_prom[["PROVINCIA"]].value_counts().reset_index()
+    provprom_map.columns = ["NAME_2", "PROMOCIONS"]
+    def map_prov_prom():
+        shapefile_prov = gpd.read_file("C:/Users/joana.APCE/Dropbox/Dades/Scripts/Shapefiles/Provincias.geojson")
+        shapefile_prov = shapefile_prov[shapefile_prov["NAME_1"]=="Cataluña"]
+        fig, ax = plt.subplots(1,1, figsize=(15,15))
+        divider = make_axes_locatable(ax)
+        tmp = shapefile_prov.copy()
+        tmp = pd.merge(tmp, provprom_map, how="left", on="NAME_2")
+        cax = divider.append_axes("right", size="3%", pad=-1) #resize the colorbar
+        cmap = colors.LinearSegmentedColormap.from_list("mi_paleta", ["#B7DEE8","#215967"]) 
+        tmp.plot(column='PROMOCIONS', ax=ax,cax=cax, cmap=cmap, legend=True, 
+                legend_kwds={'label': "Promocions"})
+        # tmp.geometry.boundary.plot(color='black', ax=ax, linewidth=0.3) #Add some borders to the geometries
+        for i, row in tmp.iterrows():
+            x, y = row['geometry'].centroid.coords[0]
+            # ax.annotate(row['NAME_2'], xy=(x, y), xytext=(3,3), textcoords="offset points", fontsize=20,
+            #             bbox=dict(facecolor='white', alpha=0.5))
+            ax.annotate(row['NAME_2'] + f"\n{row['PROMOCIONS']}", xy=(x, y), xytext=(3,3), textcoords="offset points", fontsize=20,
+                        bbox=dict(facecolor='white', alpha=0.5),color="#3A3838")
+                            # bbox=dict(facecolor='white', alpha=0.5),
+                            # arrowprops=dict(facecolor='black', arrowstyle="->"))
+            ax.axis('off')
+            return(fig)
+    st.pyplot(map_prov_prom())
+
+# MUNICIPIS
+
+if selected == "Municipis":
+    load_css_file(path + "main.css")
+    # Creating three equal-width columns, and using the right column to display an image. 
+    # The image is read from a file and then displayed using a Markdown string.
+    left_col, center_col, right_col = st.columns((1, 1, 1))
+    with right_col:
+        with open(path + "APCE.png", "rb") as f:
+            data_uri = base64.b64encode(f.read()).decode("utf-8")
+        markdown = f"""
+        #
+        ![image](data:image/png;base64,{data_uri})
+        """
+        st.markdown(markdown, unsafe_allow_html=True)
+    st.write(
+    f"""
+    <div style="text-align:center;">
+        <h1>{"ESTUDI D'OFERTA DE NOVA CONSTRUCCIÓ 2022"}</h1>
+    </div>
+    """,
+    unsafe_allow_html=True
+    )
 
 
 
@@ -420,8 +481,6 @@ if selected == "Municipis":
     dels quals s'han inventariat 928 promocions d'obra nova amb un total de 8.181 habitatges a la venda. A continuació, es presenta un anàlisi dels principals indicadors als municipis estudiats a l'edició del 2022:""")
 
     st.sidebar.header("Selecciona un municipi")
-
-
 
     mun_names = sorted(df_vf[df_vf["Any"]==2022]["GEO"].unique())
     selected_mun = st.sidebar.selectbox('Municipi seleccionat', mun_names, index= mun_names.index("Barcelona"))
@@ -500,8 +559,8 @@ if selected == "Municipis":
         df_mun_unitats = df_final[(df_final["GEO"]==Municipi) & (df_final["Any"]>=Any)].drop(["Àmbits territorials","Corones","Comarques","Província", "codiine"], axis=1).drop_duplicates(["Any","Tipologia","Unitats"]).pivot(index=["Any"], columns=["Tipologia"], values="Unitats")
         df_mun_unitats.columns= [("HABITATGES PLURIFAMILIARS", "Unitats"), ("HABITATGES UNIFAMILIARS", "Unitats"), ("TOTAL HABITATGES", "Unitats")]
         df_mun_n = pd.concat([df_mun_filtered, df_mun_unitats], axis=1)
-        df_mun_n[("HABITATGES PLURIFAMILIARS", "Unitats %")] = (df_mun_n[("HABITATGES PLURIFAMILIARS", "Unitats")]/df_mun_n[("TOTAL HABITATGES", "Unitats")])*100
-        df_mun_n[("HABITATGES UNIFAMILIARS", "Unitats %")] = (df_mun_n[("HABITATGES UNIFAMILIARS", "Unitats")] /df_mun_n[("TOTAL HABITATGES", "Unitats")])*100
+        # df_mun_n[("HABITATGES PLURIFAMILIARS", "Unitats %")] = (df_mun_n[("HABITATGES PLURIFAMILIARS", "Unitats")]/df_mun_n[("TOTAL HABITATGES", "Unitats")])*100
+        # df_mun_n[("HABITATGES UNIFAMILIARS", "Unitats %")] = (df_mun_n[("HABITATGES UNIFAMILIARS", "Unitats")] /df_mun_n[("TOTAL HABITATGES", "Unitats")])*100
         df_mun_n = df_mun_n.sort_index(axis=1, level=[0,1])
         num_cols = df_mun_n.select_dtypes(include=['float64', 'int64']).columns
         df_mun_n[num_cols] = df_mun_n[num_cols].round(0)
