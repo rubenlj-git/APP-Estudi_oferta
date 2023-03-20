@@ -807,18 +807,29 @@ if selected == "Municipis":
 
 
 
-    st.markdown("""L’estudi de l’oferta d’habitatges de nova construcció a Catalunya en la seva edició de l’any 2022, ha estat promogut i dirigit per l’Associació de Promotors de Catalunya i realitzat
-    per CATCHMENT AMR. Aquesta aplicació presenta els resultats de l’anàlisi del mercat residencial d’habitatges de nova construcció a Catalunya. En l'edició de l'any 2022, l'estudi inclou 84 municipis, 
-    dels quals s'han inventariat 928 promocions d'obra nova amb un total de 8.181 habitatges a la venda. A continuació, es presenta un anàlisi dels principals indicadors als municipis estudiats a l'edició del 2022:""")
+    st.markdown("""L’anàlisi del mercat residencial d’habitatges de nova construcció a Catalunya en l'edició de l'any 2022 inclou 84 municipis, 
+    dels quals s'han inventariat 928 promocions d'obra nova amb un total de 8.181 habitatges a la venda. A continuació, es presenten els principals indicadors dels municipis analitzats:""")
 
     st.sidebar.header("Selecciona un municipi")
 
     mun_names = sorted(df_vf[df_vf["Any"]==2022]["GEO"].unique())
     selected_mun = st.sidebar.selectbox('Municipi seleccionat', mun_names, index= mun_names.index("Barcelona"))
-    st.header(selected_mun)
-    st.markdown("""
-    Distribució de preus i superfícies
-    """)
+    st.header(f"Municipi de {selected_mun}")
+
+    def data_text(selected_mun):
+        table80_mun = bbdd_estudi_hab_mod[bbdd_estudi_hab_mod["Municipi"]==selected_mun][["Municipi", "TIPOG", "Superfície útil", "Preu mitjà", "Preu m2 útil"]].groupby(["Municipi"]).agg({"Municipi":['count'], "Superfície útil": [np.mean], "Preu mitjà": [np.mean], "Preu m2 útil": [np.mean]}).reset_index()
+        table25_mun = bbdd_estudi_hab[bbdd_estudi_hab_mod["Municipi"]==selected_mun][["Municipi", "TIPOG"]].value_counts(normalize=True).reset_index().rename(columns={0:"Proporció"})
+        table61_tipo = bbdd_estudi_hab[bbdd_estudi_hab_mod["Municipi"]==selected_mun].groupby(['Total dormitoris', 'Banys i lavabos']).size().reset_index(name='Proporcions').sort_values(by="Proporcions", ascending=False)
+        return([round(table80_mun["Preu mitjà"].values[0][0],2), round(table80_mun["Superfície útil"].values[0][0],2), 
+                 round(table80_mun["Preu m2 útil"].values[0][0],2), round(table25_mun[table25_mun["TIPOG"]=="Habitatges Plurifamiliars"]["Proporció"].values[0]*100,2), 
+                  table61_tipo["Total dormitoris"].values[0], table61_tipo["Banys i lavabos"].values[0]])
+
+
+    st.markdown(f"""Els resultats de l'estudi d'oferta de nova construcció de 2022 pel municipi de {selected_mun} mostra que el preu mitjà dels habitatges en venda es troba 
+    en {data_text(selected_mun)[0]} € amb una superfície mitjana útil de {data_text(selected_mun)[1]} m2. Com a consequència, el preu per m2 útil es troba en {data_text(selected_mun)[2]} € de mitjana. Per tipologies, els habitatges plurifamiliars
+    representen el {data_text(selected_mun)[3]}% sobre el total d'habitatges. Les característiques més comunes dels habitatges de noves construcció són {data_text(selected_mun)[4]} habitacions i {data_text(selected_mun)[5]} banys o lavabos.""")
+
+
     def plotmun_streamlit(data, selected_mun, kpi):
         df = data[(data['Municipi']==selected_mun)]
         fig = px.histogram(df, x=kpi, title= "", labels={'x':kpi, 'y':'Freqüència'})
@@ -832,13 +843,14 @@ if selected == "Municipis":
 
     left_col, right_col = st.columns((1, 1))
     with left_col:
+        st.markdown(f"""**Distribució de Preus per m2 útil**""")
         st.plotly_chart(plotmun_streamlit(bbdd_estudi_hab_mod, selected_mun,"Preu m2 útil"))
-
     with right_col:
+        st.markdown(f"""**Distribució de Superfície útil**""")
         st.plotly_chart(plotmun_streamlit(bbdd_estudi_hab_mod, selected_mun, "Superfície útil"))
 
     st.markdown(f"""
-    Tipologia d'habitatges de les promocions del municipi de {selected_mun}
+    **Tipologia d'habitatges de les promocions del municipi de {selected_mun}**
     """)
     def count_plot_mun(data, selected_mun):
         df = data[data['Municipi']==selected_mun]
@@ -852,9 +864,7 @@ if selected == "Municipis":
 
     st.plotly_chart(count_plot_mun(bbdd_estudi_hab_mod, selected_mun))
 
-    st.markdown("""
-    Habitatges a la venda segons tipologia d'habitatge
-    """)
+
     def dormscount_plot_mun(data, selected_mun):
         df = data[data['Municipi']==selected_mun]
         custom_order = ["0D", "1D", "2D", "3D", "4D", "5+D"]
@@ -877,9 +887,11 @@ if selected == "Municipis":
 
     left_col, right_col = st.columns((1, 1))
     with left_col:
+        st.markdown("""**Habitatges a la venda segons número d'habitacions**""")
         st.plotly_chart(dormscount_plot_mun(bbdd_estudi_hab_mod, selected_mun))
 
     with right_col:
+        st.markdown("""**Habitatges a la venda segons número de Banys i lavabos**""")
         st.plotly_chart(lavcount_plot_mun(bbdd_estudi_hab_mod, selected_mun))
 
 
@@ -895,7 +907,7 @@ if selected == "Municipis":
         df_mun_n = df_mun_n.sort_index(axis=1, level=[0,1])
         num_cols = df_mun_n.select_dtypes(include=['float64', 'int64']).columns
         df_mun_n[num_cols] = df_mun_n[num_cols].round(0)
-        df_mun_n[num_cols] = df_mun_n[num_cols].astype(int)
+        df_mun_n[num_cols] = df_mun_n[num_cols].astype("Int64")
         return(df_mun_n)
 
     st.markdown(table_mun(selected_mun, 2018).to_html(), unsafe_allow_html=True)
@@ -932,22 +944,24 @@ if selected == "Municipis":
         
         return fig
 
-    st.markdown("""
-    Aquest gràfic mostra la evolució dels habitatges de nova construcció per tipologia. 
-    """)
+
 
     left_col, right_col = st.columns((1, 1))
     with left_col:
+        st.markdown("""**Evolució dels habitatges de nova construcció per tipologia d'habitatge**""")
         st.plotly_chart(plot_mun_hist_units(selected_mun, "Unitats"))
     with right_col:
+        st.markdown("""**Evolució de la superfície útil mitjana per tipologia d'habitatge**""")
         st.plotly_chart(plot_mun_hist(selected_mun, 'Superfície mitjana (m² útils)'))
 
 
 
     left_col, right_col = st.columns((1, 1))
     with left_col:
+        st.markdown("""**Evolució del preu de venda per m2 útil  per tipologia d'habitatge**""")
         st.plotly_chart(plot_mun_hist(selected_mun, "Preu de venda per m² útil (€)"))
     with right_col:
+        st.markdown("""**Evolució del preu venda mitjà per tipologia d'habitatge**""")
         st.plotly_chart(plot_mun_hist(selected_mun, "Preu mitjà de venda de l'habitatge (€)"))
 
 
