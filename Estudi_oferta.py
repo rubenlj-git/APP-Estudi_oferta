@@ -28,8 +28,8 @@ import streamlit_authenticator as stauth
 # user="/home/ruben/" 
 user="C:/Users/joana.APCE/"
 
-path = user + "/Dropbox/Estudi d'oferta/2022/repos/APP-Estudi_oferta/"
-
+# path = user + "/Dropbox/Estudi d'oferta/2022/repos/APP-Estudi_oferta/"
+path = ""
 
 
 
@@ -678,9 +678,9 @@ if selected == "Catalunya":
             st.write("""<p><b>Variació anual (%) dels principals indicadors per tipologia d'habitatge</b></p>""", unsafe_allow_html=True)
             @st.cache_data
             def plot_var_CAT():
-                table117 = pd.read_excel("C:/Users/joana.APCE/Dropbox/Estudi d'oferta/2022/Dades Desembre/Estudi_oferta_taules.xlsx", sheet_name="table117", header=1).iloc[1:,]
-                table121 = pd.read_excel("C:/Users/joana.APCE/Dropbox/Estudi d'oferta/2022/Dades Desembre/Estudi_oferta_taules.xlsx", sheet_name="table121", header=1).iloc[1:,]
-                table125 = pd.read_excel("C:/Users/joana.APCE/Dropbox/Estudi d'oferta/2022/Dades Desembre/Estudi_oferta_taules.xlsx", sheet_name="table125", header=1).iloc[1:,]
+                table117 = pd.read_excel(path + "Estudi_oferta_taules.xlsx", sheet_name="table117", header=1).iloc[1:,]
+                table121 = pd.read_excel(path + "Estudi_oferta_taules.xlsx", sheet_name="table121", header=1).iloc[1:,]
+                table125 = pd.read_excel(path + "Estudi_oferta_taules.xlsx", sheet_name="table125", header=1).iloc[1:,]
                 table117 = table117[(table117["Província"].isna()) & (table117["Municipi"].isna())][["Variació % Preu m2 útil","Variació % Preu mitjà", "Variació % Superfície útil"]]
                 table121 = table121[(table121["Província"].isna()) & (table121["Municipi"].isna())][["Variació % Preu m2 útil","Variació % Preu mitjà", "Variació % Superfície útil"]]
                 table125 = table125[(table125["Província"].isna()) & (table125["Municipi"].isna())][["Variació % Preu m2 útil","Variació % Preu mitjà", "Variació % Superfície útil"]]
