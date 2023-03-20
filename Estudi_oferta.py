@@ -443,7 +443,7 @@ if selected == "Catalunya":
             provprom_map.columns = ["NAME_2", "PROMOCIONS"]
             @st.cache_data
             def map_prov_prom():
-                shapefile_prov = gpd.read_file(user + "Dropbox/Dades/Scripts/Shapefiles/Provincias.geojson")
+                shapefile_prov = gpd.read_file(path + "Provincias.geojson")
                 shapefile_prov = shapefile_prov[shapefile_prov["NAME_1"]=="Cataluña"]
                 fig, ax = plt.subplots(1,1, figsize=(10,10))
                 divider = make_axes_locatable(ax)
