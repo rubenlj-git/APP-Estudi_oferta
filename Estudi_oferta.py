@@ -12,8 +12,8 @@ import geopandas as gpd
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import plotly.graph_objects as go
 import matplotlib.colors as colors
-import streamlit.components.v1 as components
-import streamlit_authenticator as stauth
+# import streamlit.components.v1 as components
+# import streamlit_authenticator as stauth
 # Hide menu and watermark
 # hide_st_style = """
 #             <style>
