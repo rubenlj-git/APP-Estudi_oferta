@@ -1,6 +1,6 @@
 .button, .button:link, .button:visited {
   font-size: 20px;
-  background-color: #f44336;
+  background-color: #c687b5;
   color: white;
   padding: 14px 25px;
   text-align: center;
@@ -8,58 +8,38 @@
   display: inline-block;
   border: none;
   border-radius: 4px;
-  -webkit-animation: bounce .6s infinite alternate;
-  -moz-animation: bounce .6s infinite alternate;
-  animation: bounce .6s infinite alternate;
+  -webkit-animation: bounce 2s infinite alternate;
+  -moz-animation: bounce 2s infinite alternate;
+  animation: bounce 2s infinite alternate;
 }
 
 
 table.dataframe {
-
   border-collapse: collapse;
-
   margin: 25px 0;
-
   font-size: 0.7em;
-
   font-family: sans-serif;
-
   min-width: 400px;
-
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
-
 }
 
 table.dataframe thead th {
-
-  background-color: #088F8F;
-
+  background-color: #c687b5;
   color: #FFFFFF;
-
   text-align: center;
-
 }
 
 table.dataframe tbody tr:nth-of-type(even) {
-
   background-color: #f3f3f3;
-
 }
 
 table.dataframe tbody tr:last-of-type {
-
-  border-bottom: 2px solid #088F8F;
-
+  border-bottom: 2px solid #c687b5;
 }
 
 table.dataframe tbody td {
-
   padding: 12px 15px;
-
 }
-
-
-
 
 
 @-webkit-keyframes bounce {
@@ -73,7 +53,7 @@ table.dataframe tbody td {
 }
 
 .button:hover, .button:active {
-  background-color: red;
+  background-color: #c687b5;
 }
 
 /* Style inputs with type="text", type="email"and textareas */
@@ -91,8 +71,6 @@ input[type=text], input[type=email], textarea {
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 header {visibility: hidden;}
-
-
 
 .reportview-container .main .block-container{
         max-width: {percentage_width_main}%;
@@ -119,18 +97,35 @@ h1, h2 {
 }
 
 h1 {
-  font-size: 36px;
-  margin-bottom: 20px;
-  text-align: center;
+  font-size: 30px;
+  margin-bottom: 40px;
+  text-align: left;
 }
 
 h2 {
-  font-size: 24px;
+  font-size: 18px;
   margin-bottom: 10px;
 }
 
 p {
+  font-size: 15px;
   line-height: 1.5;
   margin-bottom: 10px;
+}
+.download-button {
+  background-color: #c687b5; /* Red background */
+  color: #fff; /* White text */
+  border: none; /* No border */
+  padding: 12px 24px; /* Padding around text */
+  font-size: 16px; /* Text size */
+  font-weight: bold; /* Bold text */
+  border-radius: 4px; /* Rounded corners */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* Shadow effect */
+  transition: all 0.3s ease; /* Smooth transition on hover */
+}
+
+.download-button:hover {
+  background-color: #c687b5; /* Darker red background on hover */
+  cursor: pointer; /* Change cursor to hand on hover */
 }
 
