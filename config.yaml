@@ -1,13 +1,11 @@
-credentials:
-  usernames:
-    APCE_estudis:
-      email: estudisapcecat@gmail.com
-      name: APCE Estudis
-      password: $2b$12$XuH4ikorx/3JiUKHKd3uVebT4S5DyKkEsGGoDroH.fwUqN9A67tsK # To be replaced with hashed password
 cookie:
   expiry_days: 30
-  key: some_signature_key # Must be string
+  key: some_signature_key
   name: some_cookie_name
+credentials:
+  usernames:
+    apce_estudis:
+      name: APCE Estudis
+      password: $2b$12$XuH4ikorx/3JiUKHKd3uVebT4S5DyKkEsGGoDroH.fwUqN9A67tsK
 preauthorized:
-  emails:
-  - melsby@gmail.com
+  emails: rubenlopezjimenez3@gmail.com

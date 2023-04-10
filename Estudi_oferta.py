@@ -64,19 +64,44 @@ authenticator = stauth.Authenticate(
 
 name, authentication_status, username = authenticator.login('Inicia Sessió', 'main')
 
+
+
 if authentication_status is False:
     st.error('Usuari o contrasenya incorrecte')
-    try:
-        if authenticator.reset_password(username, 'Reset password'):
-            st.success('Password modified successfully')
-    except Exception as e:
-        st.error(e)
+    # try:
+    #     username_forgot_pw, email_forgot_password, random_password = authenticator.forgot_password('Forgot password')
+    #     if username_forgot_pw:
+    #         st.success('New password sent securely')
+    #         with open('config.yaml', 'w') as file:
+    #             yaml.dump(config, file, default_flow_style=False)
+    #     else:
+    #         st.error('Username not found')
+    # except Exception as e:
+    #     st.error(e)
 elif authentication_status is None:
     st.warning("Siusplau entri el nom d'usuari i contrasenya")
+    with st.expander("Registreu-vos!"):
+        try:
+            if authenticator.register_user('Registreu-vos', preauthorization=True):
+                st.success('Usuari registrat correctament')
+                with open('config.yaml', 'w') as file:
+                    yaml.dump(config, file, default_flow_style=False)
+        except Exception as e:
+            st.error(e)
+    # with st.expander("Canvieu la vostra contrasenya"):
+    #     try:
+    #         if authenticator.reset_password(username, 'Canvieu la vostra contrasenya'):
+    #             st.success('Contrasenya modificada correctament')
+    #             with open('config.yaml', 'w') as file:
+    #                 yaml.dump(config, file, default_flow_style=False)
+    #     except Exception as e:
+    #         st.error(e)
+
 elif authentication_status:
     left_col, right_col, margin_right = st.columns((2, 1, 0.5))
     with left_col:
         st.markdown(f'Benvingut **{name}**')
+        # st.title("ESTUDI D'OFERTA DE NOVA CONSTRUCCIÓ 2022")
         st.write("""<h1>ESTUDI D'OFERTA DE NOVA CONSTRUCCIÓ 2022</h1>""", unsafe_allow_html=True)
     with margin_right:
         authenticator.logout('Tanca Sessió', 'main')
@@ -89,6 +114,7 @@ elif authentication_status:
         </div>
         """
         st.markdown(markdown, unsafe_allow_html=True)
+
 
 
     # Creating a dropdown menu with options and icons, and customizing the appearance of the menu using CSS styles.
