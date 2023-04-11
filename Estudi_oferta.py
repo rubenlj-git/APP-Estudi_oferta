@@ -21,8 +21,8 @@ from yaml.loader import SafeLoader
 #c687b5
 #fa05b8
 
-user="/home/ruben/" 
-# user="C:/Users/joana.APCE/"
+# user="/home/ruben/" 
+user="C:/Users/joana.APCE/"
 
 path = user + "Dropbox/Estudi d'oferta/2022/repos/APP-Estudi_oferta/"
 # path = ""
@@ -98,7 +98,7 @@ elif authentication_status is None:
     #         st.error(e)
 
 elif authentication_status:
-    left_col, right_col, margin_right = st.columns((2, 1, 0.5))
+    left_col, right_col, margin_right = st.columns((3, 1, 0.5))
     with left_col:
         st.markdown(f'Benvingut **{name}**')
         # st.title("ESTUDI D'OFERTA DE NOVA CONSTRUCCIÓ 2022")
@@ -109,7 +109,7 @@ elif authentication_status:
         with open(path + "APCE_mod.png", "rb") as f:
             data_uri = base64.b64encode(f.read()).decode("utf-8")
         markdown = f"""
-        <div>
+        <div class="image">
         <img src="data:image/png;base64, {data_uri}" alt="image" />
         </div>
         """
@@ -126,15 +126,15 @@ elif authentication_status:
         default_index=0,  # optional
         orientation="horizontal",
         styles={
-            "container": {"padding": "0!important", "background-color": "#fafafa"},
+            "container": {"padding": "0!important", "background-color": "#f3e5ef"},
             "icon": {"color": "orange", "font-size": "17px"},
             "nav-link": {
                 "font-size": "17px",
                 "text-align": "center",
                 "font-weight": "bold",
                 "color":"#363534",
-                "margin": "0px",
-                "--hover-color": "#eee",
+                "margin": "20px",
+                "--hover-color": "#f3e5ef",
                 "background-color": "#f3e5ef"
                 },
             "nav-link-selected": {"background-color": "#c687b5"},
@@ -592,7 +592,7 @@ elif authentication_status:
                     fig.update_traces(marker=dict(color="#d9afce"))
                     return(fig)
                 # st.write(plot_caracteristiques())
-                st.plotly_chart(plot_caracteristiques())
+                st.plotly_chart(plot_caracteristiques(), use_container_width=True, responsive=True)
 
         if selected_index=="Qualitats i equipaments":
             left_col, right_col = st.columns((1, 1))
@@ -623,7 +623,7 @@ elif authentication_status:
                     fig.layout.yaxis.title.text = "Equipaments"
                     fig.update_traces(marker=dict(color="#d9afce"))
                     return(fig)
-                st.plotly_chart(plot_equipaments())
+                st.plotly_chart(plot_equipaments(), use_container_width=True, responsive=True)
             with right_col:
                 st.write("""<p><b>Principals qualitats dels habitatges</b></p>""", unsafe_allow_html=True)
                 def plot_qualitats():
@@ -635,7 +635,7 @@ elif authentication_status:
                     fig.layout.yaxis.title.text = "Qualitats"
                     fig.update_traces(marker=dict(color="#d9afce"))
                     return(fig)
-                st.plotly_chart(plot_qualitats())
+                st.plotly_chart(plot_qualitats(), use_container_width=True, responsive=True)
         if selected_index=="Superfície i preus":
             left_col, right_col = st.columns((1, 1))
             with left_col:
@@ -688,7 +688,7 @@ elif authentication_status:
                     fig.layout.xaxis.title.text = "Preu per m2 útil"
                     fig.layout.yaxis.title.text = "Tipologia d'habitatge"
                     return(fig)
-                st.plotly_chart(indicadors_preum2_mitjanes())
+                st.plotly_chart(indicadors_preum2_mitjanes(), use_container_width=True, responsive=True)
             with right_col:
                 st.write("""<p><b>Preu mitjà per tipologia d'habitatge</b></p>""", unsafe_allow_html=True)
                 def indicadors_preu_mitjanes():
@@ -702,7 +702,7 @@ elif authentication_status:
                     fig.layout.xaxis.title.text = "Preu mitjà"
                     fig.layout.yaxis.title.text = "Tipologia d'habitatge"
                     return(fig)
-                st.plotly_chart(indicadors_preu_mitjanes())
+                st.plotly_chart(indicadors_preu_mitjanes(), use_container_width=True, responsive=True)
                 st.write("""<p><b>Superfície útil per tipologia d'habitatge</b></p>""", unsafe_allow_html=True)
                 def indicadors_super_mitjanes():
                     table76_tipo = bbdd_estudi_hab_mod[["Total dormitoris", "TIPOG","Superfície útil", "Preu mitjà", "Preu m2 útil"]].set_index(["Total dormitoris", "TIPOG"]).groupby(["TIPOG", "Total dormitoris"]).apply(np.mean).reset_index()
@@ -715,7 +715,7 @@ elif authentication_status:
                     fig.layout.xaxis.title.text = "Superfície útil"
                     fig.layout.yaxis.title.text = "Tipologia d'habitatge"
                     return(fig)
-                st.plotly_chart(indicadors_super_mitjanes())
+                st.plotly_chart(indicadors_super_mitjanes(), use_container_width=True, responsive=True)
 
         if selected_index=="Comparativa 2022-2021":
             left_col, right_col = st.columns((1, 1))
@@ -888,10 +888,10 @@ elif authentication_status:
         left_col, right_col = st.columns((1, 1))
         with left_col:
             st.markdown(f"""**Distribució de Preus per m2 útil**""")
-            st.plotly_chart(plotmun_streamlit(bbdd_estudi_hab_mod, selected_mun,"Preu m2 útil"))
+            st.plotly_chart(plotmun_streamlit(bbdd_estudi_hab_mod, selected_mun,"Preu m2 útil"), use_container_width=True, responsive=True)
         with right_col:
             st.markdown(f"""**Distribució de Superfície útil**""")
-            st.plotly_chart(plotmun_streamlit(bbdd_estudi_hab_mod, selected_mun, "Superfície útil"))
+            st.plotly_chart(plotmun_streamlit(bbdd_estudi_hab_mod, selected_mun, "Superfície útil"), use_container_width=True, responsive=True)
 
         st.markdown(f"""
         **Tipologia d'habitatges de les promocions del municipi de {selected_mun}**
@@ -906,7 +906,7 @@ elif authentication_status:
             fig.update_traces(marker=dict(color="#d9afce"))
             return fig
 
-        st.plotly_chart(count_plot_mun(bbdd_estudi_hab_mod, selected_mun))
+        st.plotly_chart(count_plot_mun(bbdd_estudi_hab_mod, selected_mun), use_container_width=True, responsive=True)
 
 
         def dormscount_plot_mun(data, selected_mun):
@@ -932,11 +932,11 @@ elif authentication_status:
         left_col, right_col = st.columns((1, 1))
         with left_col:
             st.markdown("""**Habitatges a la venda segons número d'habitacions**""")
-            st.plotly_chart(dormscount_plot_mun(bbdd_estudi_hab_mod, selected_mun))
+            st.plotly_chart(dormscount_plot_mun(bbdd_estudi_hab_mod, selected_mun), use_container_width=True, responsive=True)
 
         with right_col:
             st.markdown("""**Habitatges a la venda segons número de Banys i lavabos**""")
-            st.plotly_chart(lavcount_plot_mun(bbdd_estudi_hab_mod, selected_mun))
+            st.plotly_chart(lavcount_plot_mun(bbdd_estudi_hab_mod, selected_mun), use_container_width=True, responsive=True)
 
 
         st.header("Comparativa amb anys anteriors: Municipi de " + selected_mun)
@@ -975,17 +975,17 @@ elif authentication_status:
         left_col, right_col = st.columns((1, 1))
         with left_col:
             st.markdown("""**Evolució dels habitatges de nova construcció per tipologia d'habitatge**""")
-            st.plotly_chart(plot_mun_hist_units(selected_mun, "Unitats"))
+            st.plotly_chart(plot_mun_hist_units(selected_mun, "Unitats"), use_container_width=True, responsive=True)
         with right_col:
             st.markdown("""**Evolució de la superfície útil mitjana per tipologia d'habitatge**""")
-            st.plotly_chart(plot_mun_hist(selected_mun, 'Superfície mitjana (m² útils)'))
+            st.plotly_chart(plot_mun_hist(selected_mun, 'Superfície mitjana (m² útils)'), use_container_width=True, responsive=True)
         left_col, right_col = st.columns((1, 1))
         with left_col:
             st.markdown("""**Evolució del preu de venda per m2 útil  per tipologia d'habitatge**""")
-            st.plotly_chart(plot_mun_hist(selected_mun, "Preu de venda per m² útil (€)"))
+            st.plotly_chart(plot_mun_hist(selected_mun, "Preu de venda per m² útil (€)"), use_container_width=True, responsive=True)
         with right_col:
             st.markdown("""**Evolució del preu venda mitjà per tipologia d'habitatge**""")
-            st.plotly_chart(plot_mun_hist(selected_mun, "Preu mitjà de venda de l'habitatge (€)"))
+            st.plotly_chart(plot_mun_hist(selected_mun, "Preu mitjà de venda de l'habitatge (€)"), use_container_width=True, responsive=True)
     if selected=="Districtes de Barcelona":
         st.sidebar.header("Selecciona un districte de Barcelona")
         dis_names_aux = sorted(bbdd_estudi_prom["Nom DIST"].dropna().unique().tolist())
@@ -1016,10 +1016,10 @@ elif authentication_status:
         left_col, right_col = st.columns((1, 1))
         with left_col:
             st.markdown(f"""**Distribució de Preus per m2 útil**""")
-            st.plotly_chart(plotdis_streamlit(bbdd_estudi_hab_mod, selected_dis,"Preu m2 útil"))
+            st.plotly_chart(plotdis_streamlit(bbdd_estudi_hab_mod, selected_dis,"Preu m2 útil"), use_container_width=True, responsive=True)
         with right_col:
             st.markdown(f"""**Distribució de Superfície útil**""")
-            st.plotly_chart(plotdis_streamlit(bbdd_estudi_hab_mod, selected_dis, "Superfície útil"))
+            st.plotly_chart(plotdis_streamlit(bbdd_estudi_hab_mod, selected_dis, "Superfície útil"), use_container_width=True, responsive=True)
 
         st.markdown(f"""
         **Tipologia d'habitatges de les promocions del municipi de {selected_dis}**
@@ -1056,11 +1056,11 @@ elif authentication_status:
         left_col, right_col = st.columns((1, 1))
         with left_col:
             st.markdown("""**Habitatges a la venda segons número d'habitacions**""")
-            st.plotly_chart(dormscount_plot_dis(bbdd_estudi_hab_mod, selected_dis))
+            st.plotly_chart(dormscount_plot_dis(bbdd_estudi_hab_mod, selected_dis), use_container_width=True, responsive=True)
 
         with right_col:
             st.markdown("""**Habitatges a la venda segons número de Banys i lavabos**""")
-            st.plotly_chart(lavcount_plot_dis(bbdd_estudi_hab_mod, selected_dis))
+            st.plotly_chart(lavcount_plot_dis(bbdd_estudi_hab_mod, selected_dis), use_container_width=True, responsive=True)
 
 
         st.header(f"Comparativa amb anys anteriors: Districte de {selected_dis[3:]}")
@@ -1088,19 +1088,19 @@ elif authentication_status:
             st.markdown("")
             st.markdown("")
             st.markdown("""**Evolució dels habitatges de nova construcció per tipologia d'habitatge**""")
-            st.plotly_chart(plot_dis_hist_units(selected_dis, "Unitats"))
+            st.plotly_chart(plot_dis_hist_units(selected_dis, "Unitats"), use_container_width=True, responsive=True)
         with right_col:
             st.markdown("")
             st.markdown("")
             st.markdown("""**Evolució de la superfície útil mitjana per tipologia d'habitatge**""")
-            st.plotly_chart(plot_dis_hist(selected_dis, 'Superfície mitjana (m² útils)'))
+            st.plotly_chart(plot_dis_hist(selected_dis, 'Superfície mitjana (m² útils)'), use_container_width=True, responsive=True)
         left_col, right_col = st.columns((1, 1))
         with left_col:
             st.markdown("""**Evolució del preu de venda per m2 útil  per tipologia d'habitatge**""")
-            st.plotly_chart(plot_dis_hist(selected_dis, "Preu de venda per m² útil (€)"))
+            st.plotly_chart(plot_dis_hist(selected_dis, "Preu de venda per m² útil (€)"), use_container_width=True, responsive=True)
         with right_col:
             st.markdown("""**Evolució del preu venda mitjà per tipologia d'habitatge**""")
-            st.plotly_chart(plot_dis_hist(selected_dis, "Preu mitjà de venda de l'habitatge (€)"))
+            st.plotly_chart(plot_dis_hist(selected_dis, "Preu mitjà de venda de l'habitatge (€)"),use_container_width=True, responsive=True)
 
     if selected=="Contacte":
         CONTACT_EMAIL = "estudis@apcecat.cat"
