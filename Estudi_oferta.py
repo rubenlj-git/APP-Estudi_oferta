@@ -33,7 +33,7 @@ st.set_page_config(
     layout="wide"
 )
 
-locale.setlocale(locale.LC_ALL, 'es_ES.UTF-8')
+# locale.setlocale(locale.LC_ALL, 'es_ES.UTF-8')
 
 def load_css_file(css_file_path):
     with open(css_file_path) as f:
