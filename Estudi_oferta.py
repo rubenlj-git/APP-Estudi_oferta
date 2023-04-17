@@ -824,18 +824,18 @@ elif authentication_status:
         obtenen el preu més elevat (389.716€) i un preu per m2
         útil més alt (4.796€).""")
 
-        st.sidebar.header("**PROVÍNCIES I ÀMBITS DE CATALUNYA**")
+        st.sidebar.header("**PROVÍNCIES I ÀMBITS TERRITORIALS DE CATALUNYA**")
         prov_names = ["Barcelona", "Girona", "Tarragona", "Lleida"]
         ambit_names = sorted([ambit_n for ambit_n in ambits_df["GEO"].unique().tolist() if ambit_n!="Catalunya"])
 
 
-        selected_option = st.sidebar.selectbox("", ["Províncies", "Àmbits territorials"])
+        selected_option = st.sidebar.radio("", ["Províncies", "Àmbits territorials"])
         if selected_option=="Àmbits territorials":
             selected_geo = st.sidebar.selectbox('', ambit_names, index= ambit_names.index("Àmbit territorial Metropolità"))
             st.title(f"{selected_geo}")
         if selected_option=="Províncies":
             selected_geo = st.sidebar.selectbox('', prov_names, index= prov_names.index("Barcelona"))
-            st.title(f"Província de {selected_geo}")
+            st.title(f"PROVÍNCIA DE {selected_geo.upper()}")
         if selected_option=="Províncies" or selected_option=="Àmbits territorials" or selected_option=="Catalunya":
             def table_geo(geo, any_ini, any_fin, selected):
                 if selected=="Àmbits territorials":
@@ -862,8 +862,8 @@ elif authentication_status:
             min_year, max_year = st.sidebar.slider("**Interval d'anys de la mostra**", value=[2018, 2022], min_value=2018, max_value=2022)
             st.markdown(table_geo(selected_geo, min_year, max_year, selected_option).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_geo(selected_geo, min_year, max_year, selected_option), f"Estudi_oferta_{selected_geo}.xlsx"), unsafe_allow_html=True)
-            def tipog_donut(selected_geo):
-                donut_tipog = bbdd_estudi_hab[bbdd_estudi_hab["PROVINCIA"]=="Barcelona"][["PROVINCIA", "TIPO"]].value_counts(normalize=True).reset_index()
+            def tipog_donut(prov):
+                donut_tipog = bbdd_estudi_hab[bbdd_estudi_hab["PROVINCIA"]==prov][["PROVINCIA", "TIPO"]].value_counts(normalize=True).reset_index()
                 donut_tipog.columns = ["PROVINCIA", "TIPO", "Habitatges en oferta"]
                 fig = go.Figure()
                 fig.add_trace(go.Pie(
@@ -937,11 +937,53 @@ elif authentication_status:
                 table17_hab_prov = table17_hab_prov[["PROVINCIA","Claus en mà"]].rename(columns={"PROVINCIA": "Província","Claus en mà":"Acabats sobre habitatges en oferta"})
                 acabats_oferta = table17_hab_prov[table17_hab_prov["Província"]==prov].iloc[0,1]
                 return([hab_oferta, acabats_oferta])
+            def qualitats_prov(prov):
+                table62_hab = bbdd_estudi_hab[bbdd_estudi_hab["PROVINCIA"]==prov][["Aire condicionat","Bomba de calor","Aero","Calefacció","Preinstal·lació d'A.C./B. Calor/Calefacció",'Parquet','Armaris encastats','Placa de cocció amb gas','Placa de cocció vitroceràmica',"Placa d'inducció",'Plaques solars']].sum(axis=0)
+                table62_hab = pd.DataFrame({"Equipaments":table62_hab.index, "Total":table62_hab.values})
+                table62_hab = table62_hab.set_index("Equipaments").apply(lambda row: (row / bbdd_estudi_hab.shape[0])*100)
+                table62_hab = table62_hab.sort_values("Total", ascending=True)
+                fig = go.Figure()
+                fig.add_trace(go.Bar(
+                    x=table62_hab["Total"],  # Use values as x-axis data
+                    y=table62_hab.index,  # Use categories as y-axis data
+                    orientation="h",  # Set orientation to horizontal
+                    marker=dict(color="#d9afce"),  # Set bar color
+                ))
+                fig.update_layout(
+                    title="Qualitats d'habitatges en oferta",
+                    xaxis_title="% d'habitatges en oferta",
+                    yaxis_title="Qualitats",
+                )
+                return(fig)
+            def equipaments_prov(prov):
+                table67_hab = bbdd_estudi_hab[bbdd_estudi_hab["PROVINCIA"]==prov][["Zona enjardinada", "Parc infantil", "Piscina comunitària", "Traster", "Ascensor", "Equipament Esportiu", "Sala de jocs", "Sauna", "Altres", "Cap dels anteriors"]].sum(axis=0)
+                table67_hab = pd.DataFrame({"Equipaments":table67_hab.index, "Total":table67_hab.values})
+                table67_hab = table67_hab.set_index("Equipaments").apply(lambda row: row.mul(100) / bbdd_estudi_hab.shape[0])
+                table67_hab = table67_hab.sort_values("Total", ascending=True)
+                fig = go.Figure()
+                fig.add_trace(go.Bar(
+                    x=table67_hab["Total"],  # Use values as x-axis data
+                    y=table67_hab.index,  # Use categories as y-axis data
+                    orientation="h",  # Set orientation to horizontal
+                    marker=dict(color="#d9afce"),  # Set bar color
+                ))
+                fig.update_layout(
+                    title="Equipaments d'habitatges en oferta",
+                    xaxis_title="% d'habitatges en oferta",
+                    yaxis_title="Equipaments",
+                )
+                return(fig)
+            
             left_col, right_col = st.columns((1,1))
             with left_col:
                 st.plotly_chart(tipog_donut(selected_geo), use_container_width=True, responsive=True)
             with right_col:
                 st.plotly_chart(num_dorms_prov(selected_geo), use_container_width=True, responsive=True)
+            left_col, right_col = st.columns((1,1))
+            with left_col:
+                st.plotly_chart(qualitats_prov(selected_geo), use_container_width=True, responsive=True)
+            with right_col:
+                st.plotly_chart(equipaments_prov(selected_geo), use_container_width=True, responsive=True)
             left_col, center_margin, right_col, right_margin = st.columns((1, 0.38, 1, 0.38))
             with left_col:
                 st.plotly_chart(tipo_obra_prov(selected_geo))
@@ -977,13 +1019,14 @@ elif authentication_status:
                 st.metric("**Habitatges en construcció**", format(int(metric_estat(selected_geo)[0] - metric_estat(selected_geo)[1]), ",d"))
                 st.metric("**Habitatges acabats**", format(int(metric_estat(selected_geo)[1]), ",d"))
 
+
     # MUNICIPIS
     if selected == "Municipis":
         st.sidebar.header("**MUNICIPIS DE CATALUNYA**")
 
         mun_names = sorted(df_vf[df_vf["Any"]==2022]["GEO"].unique())
         selected_mun = st.sidebar.selectbox('**Municipi seleccionat:**', mun_names, index= mun_names.index("Barcelona"))
-        st.title(f"Municipi de {selected_mun}")
+        st.title(f"MUNICIPI DE {selected_mun.upper()}")
 
         def data_text(selected_mun):
             table80_mun = bbdd_estudi_hab_mod[bbdd_estudi_hab_mod["Municipi"]==selected_mun][["Municipi", "TIPOG", "Superfície útil", "Preu mitjà", "Preu m2 útil"]].groupby(["Municipi"]).agg({"Municipi":['count'], "Superfície útil": [np.mean], "Preu mitjà": [np.mean], "Preu m2 útil": [np.mean]}).reset_index()
@@ -1122,7 +1165,7 @@ elif authentication_status:
         dis_names_aux = [i[3:] for i in dis_names_aux_num]
         selected_dis = st.sidebar.selectbox('**Districte seleccionat:**', dis_names_aux)
 
-        st.title(f"Districte de {selected_dis}")
+        st.title(f"DISTRICTE DE {selected_dis.upper()}")
         def data_text(selected_dis):
             table80_mun = bbdd_estudi_hab_mod[(bbdd_estudi_hab_mod["Municipi"]=="Barcelona") & (bbdd_estudi_hab_mod["Nom DIST"]==selected_dis)][["Nom DIST", "TIPOG", "Superfície útil", "Preu mitjà", "Preu m2 útil"]].groupby(["Nom DIST"]).agg({"Nom DIST":['count'], "Superfície útil": [np.mean], "Preu mitjà": [np.mean], "Preu m2 útil": [np.mean]}).reset_index()
             table25_mun = bbdd_estudi_hab[(bbdd_estudi_hab_mod["Municipi"]=="Barcelona") & (bbdd_estudi_hab_mod["Nom DIST"]==selected_dis)][["Nom DIST", "TIPOG"]].value_counts(normalize=True).reset_index().rename(columns={0:"Proporció"})
