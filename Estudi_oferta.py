@@ -558,7 +558,7 @@ elif authentication_status:
                     prommun_map.columns = ["municipi", "Municipi_n", "Habitatges en oferta"]
                     prommun_map["municipi"] = prommun_map["municipi"].astype(float)
 
-                    shapefile_mun = gpd.read_file("C:/Users/joana.APCE/Dropbox/Dades/Scripts/Shapefiles/shapefile_mun.geojson")
+                    shapefile_mun = gpd.read_file(path + "shapefile_mun.geojson")
                     shapefile_mun["municipi"] = shapefile_mun["municipi"].astype(float)
                     tmp = pd.merge(shapefile_mun, prommun_map, how="left", on="municipi")
                     fig, ax = plt.subplots(1,1, figsize=(20,20))
