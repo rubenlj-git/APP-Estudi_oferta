@@ -549,7 +549,7 @@ elif authentication_status:
                     ax.axis('off')
                     fig.patch.set_alpha(0)
                     return(fig)
-                st.pyplot(map_prov_prom(), use_container_width=True)
+                st.pyplot(map_prov_prom())
             with right_col:
                 st.markdown("**Figura 2**. Nombre d'habitatges en oferta per municipis a Catalunya")
                 @st.cache_data
@@ -571,7 +571,7 @@ elif authentication_status:
                     ax.axis('off')
                     fig.patch.set_alpha(0)
                     return(fig)
-                st.pyplot(map_mun_hab_oferta(), use_container_width=True)
+                st.pyplot(map_mun_hab_oferta())
 
         if selected_index=="Característiques":
             left_col, right_col = st.columns((1, 1))
