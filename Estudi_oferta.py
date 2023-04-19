@@ -22,10 +22,10 @@ import locale
 #fa05b8
 
 # user="/home/ruben/" 
-user = "C:/Users/joana.APCE/"
+# user = "C:/Users/joana.APCE/"
 
-path = user + "Dropbox/Estudi d'oferta/2022/repos/APP-Estudi_oferta/"
-# path = ""
+# path = user + "Dropbox/Estudi d'oferta/2022/repos/APP-Estudi_oferta/"
+path = ""
 
 st.set_page_config(
     page_title="ESTUDI D'OFERTA APCE",
