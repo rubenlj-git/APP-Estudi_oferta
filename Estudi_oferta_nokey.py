@@ -1316,7 +1316,7 @@ if selected=="Districtes de Barcelona":
         fig.update_traces(marker=dict(color="#d9afce"))
         return fig
 
-    st.plotly_chart(count_plot_dis(bbdd_estudi_hab_mod, selected_dis))
+    st.plotly_chart(count_plot_dis(bbdd_estudi_hab_mod, selected_dis), use_container_width=True, responsive=True)
     @st.cache_data
     def dormscount_plot_dis(data, selected_dis):
         df = data[data['Nom DIST']==selected_dis]
