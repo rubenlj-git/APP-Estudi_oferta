@@ -1111,7 +1111,8 @@ elif authentication_status:
         def data_text(selected_mun):
             table80_mun = bbdd_estudi_hab_mod[bbdd_estudi_hab_mod["Municipi"]==selected_mun][["Municipi", "TIPOG", "Superfície útil", "Preu mitjà", "Preu m2 útil"]].groupby(["Municipi"]).agg({"Municipi":['count'], "Superfície útil": [np.mean], "Preu mitjà": [np.mean], "Preu m2 útil": [np.mean]}).reset_index()
             table25_mun = bbdd_estudi_hab[bbdd_estudi_hab_mod["Municipi"]==selected_mun][["Municipi", "TIPOG"]].value_counts(normalize=True).reset_index().rename(columns={0:"Proporció"})
-            table61_tipo = bbdd_estudi_hab[bbdd_estudi_hab_mod["Municipi"]==selected_mun].groupby(['Total dormitoris', 'Banys i lavabos']).size().reset_index(name='Proporcions').sort_values(by="Proporcions", ascending=False)
+            table61_hab = bbdd_estudi_hab[bbdd_estudi_hab_mod["Municipi"]==selected_mun].groupby(['Total dormitoris']).size().reset_index(name='Proporcions').sort_values(by="Proporcions", ascending=False)
+            table61_lav = bbdd_estudi_hab[bbdd_estudi_hab_mod["Municipi"]==selected_mun].groupby(['Banys i lavabos']).size().reset_index(name='Proporcions').sort_values(by="Proporcions", ascending=False)
             try:
                 proporcio_tipo = round(table25_mun[table25_mun["TIPOG"]=="Habitatges Plurifamiliars"]["Proporció"].values[0]*100,2)
             except IndexError:
@@ -1119,8 +1120,7 @@ elif authentication_status:
 
             return([round(table80_mun["Preu mitjà"].values[0][0],2), round(table80_mun["Superfície útil"].values[0][0],2), 
                     round(table80_mun["Preu m2 útil"].values[0][0],2), proporcio_tipo, 
-                    table61_tipo["Total dormitoris"].values[0], table61_tipo["Banys i lavabos"].values[0]])
-
+                    table61_hab["Total dormitoris"].values[0], table61_lav["Banys i lavabos"].values[0]])
 
         st.markdown(f"""Els resultats de l'estudi d'oferta de nova construcció de 2022 pel municipi de {selected_mun} mostren que el preu mitjà dels habitatges en venda es troba 
         en {data_text(selected_mun)[0]} € amb una superfície mitjana útil de {data_text(selected_mun)[1]} m2. Com a consequència, el preu per m2 útil es troba en {data_text(selected_mun)[2]} € de mitjana. Per tipologies, els habitatges plurifamiliars
@@ -1314,10 +1314,12 @@ elif authentication_status:
         def data_text(selected_dis):
             table80_mun = bbdd_estudi_hab_mod[(bbdd_estudi_hab_mod["Municipi"]=="Barcelona") & (bbdd_estudi_hab_mod["Nom DIST"]==selected_dis)][["Nom DIST", "TIPOG", "Superfície útil", "Preu mitjà", "Preu m2 útil"]].groupby(["Nom DIST"]).agg({"Nom DIST":['count'], "Superfície útil": [np.mean], "Preu mitjà": [np.mean], "Preu m2 útil": [np.mean]}).reset_index()
             table25_mun = bbdd_estudi_hab[(bbdd_estudi_hab_mod["Municipi"]=="Barcelona") & (bbdd_estudi_hab_mod["Nom DIST"]==selected_dis)][["Nom DIST", "TIPOG"]].value_counts(normalize=True).reset_index().rename(columns={0:"Proporció"})
-            table61_tipo = bbdd_estudi_hab[(bbdd_estudi_hab_mod["Municipi"]=="Barcelona") & (bbdd_estudi_hab_mod["Nom DIST"]==selected_dis)].groupby(['Total dormitoris', 'Banys i lavabos']).size().reset_index(name='Proporcions').sort_values(by="Proporcions", ascending=False)
+            table61_hab = bbdd_estudi_hab[(bbdd_estudi_hab_mod["Municipi"]=="Barcelona") & (bbdd_estudi_hab_mod["Nom DIST"]==selected_dis)].groupby(['Total dormitoris']).size().reset_index(name='Proporcions').sort_values(by="Proporcions", ascending=False)
+            table61_lav = bbdd_estudi_hab[(bbdd_estudi_hab_mod["Municipi"]=="Barcelona") & (bbdd_estudi_hab_mod["Nom DIST"]==selected_dis)].groupby(['Banys i lavabos']).size().reset_index(name='Proporcions').sort_values(by="Proporcions", ascending=False)
+
             return([round(table80_mun["Preu mitjà"].values[0][0],2), round(table80_mun["Superfície útil"].values[0][0],2), 
                     round(table80_mun["Preu m2 útil"].values[0][0],2), round(table25_mun[table25_mun["TIPOG"]=="Habitatges Plurifamiliars"]["Proporció"].values[0]*100,2), 
-                    table61_tipo["Total dormitoris"].values[0], table61_tipo["Banys i lavabos"].values[0]])
+                    table61_hab["Total dormitoris"].values[0], table61_lav["Banys i lavabos"].values[0]])
 
         st.markdown(f"""Els resultats de l'estudi d'oferta de nova construcció de 2022 pel districte de {selected_dis} mostren que el preu mitjà dels habitatges en venda es troba 
         en {data_text(selected_dis)[0]} € amb una superfície mitjana útil de {data_text(selected_dis)[1]} m2. Com a consequència, el preu per m2 útil es troba en {data_text(selected_dis)[2]} € de mitjana. Per tipologies, els habitatges plurifamiliars
